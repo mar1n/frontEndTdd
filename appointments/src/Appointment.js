@@ -1,4 +1,4 @@
 import React from 'react';
 
 
-export const Appointment = () => (<div>Ashley</div>);
+export const Appointment = ({customer: {firstName}}) => (<div>{firstName}</div>);
