@@ -4,31 +4,37 @@ import { Appointment } from '../src/Appointment';
 import { render, screen } from '@testing-library/react';
 import {createRoot} from 'react-dom/client';
 
+
+
 describe("Appointment", () => {
+  let container;
+  let customer;
+  let root;
+  let render;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    root = createRoot(container);
+    render = component => root.render(component);
+  })
+
+  
   it("renders the customer first name", () => {
-    const customer = { firstName: "Ashley" };
-    const component = <Appointment customer={customer} />;
-    const rootContainer = document.createElement("div");
-
-    const root = createRoot(rootContainer);
-
+    customer = { firstName: "Ashley" };
+    
     act(() => {
-      root.render(component);
+      render(<Appointment customer={customer} />);
     })
 
-    expect(rootContainer.textContent).toMatch("Ashley");
+    expect(container.textContent).toMatch("Ashley");
   });
   it('renders another customer first name', () => {
-    const customer = { firstName: "Jordan" };
-    const component = <Appointment customer={customer} />;
-    const rootContainer = document.createElement("div");
+    customer = { firstName: "Jordan" };
 
-    const root = createRoot(rootContainer);
-    
     act(() => {
-      root.render(component);
+      render(<Appointment customer={customer} />);
     })
     
-    expect(rootContainer.textContent).toMatch("Jordan");
+    expect(container.textContent).toMatch("Jordan");
   });
 });
