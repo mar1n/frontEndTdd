@@ -1,7 +1,7 @@
 import React from "react";
-import { act } from "react-dom/test-utils";
+import ReactTestUtils, { act } from "react-dom/test-utils";
 import { Appointment, AppointmentsDayView } from "../src/Appointment";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { createRoot } from "react-dom/client";
 
 describe("Appointment", () => {
@@ -89,5 +89,28 @@ describe("AppointmentsDayView", () => {
       render(<AppointmentsDayView appointments={appointments} />);
     });
     expect(container.textContent).toMatch("Ashley");
+  });
+  it("has a button element in each li", () => {
+    act(() => {
+      render(<AppointmentsDayView appointments={appointments} />);
+    });
+    expect(container.querySelectorAll("li > button")).toHaveLength(2);
+    expect(container.querySelectorAll("li > button")[0].type).toEqual("button");
+  });
+
+  it("renders another appointment when selected", async () => {
+    await act(async () => {
+      container = document.createElement("div");
+      root = createRoot(container);
+      render = (component) => root.render(component);
+      render(<AppointmentsDayView appointments={appointments} />);
+      console.log("container", container);
+      // console.log('button', button);
+      const button = container.querySelectorAll("button")[1];
+      console.log("button", button);
+      //fireEvent.click(screen.getByText("13"));
+      // expect(container.textContent).toMatch('Jordan');
+    });
+    expect(container.querySelectorAll("li > button")).toHaveLength(2);
   });
 });
