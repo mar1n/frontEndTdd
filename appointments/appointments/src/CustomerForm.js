@@ -18,10 +18,10 @@ export const CustomerForm = ({
       [target.name]: target.value,
     }));
   return (
-    <form id="customer" onSubmit={() => onSubmit(customer)}>
+    <form onChange={handleChange} id="customer" onSubmit={() => onSubmit(customer)}>
       <label htmlFor="firstName">First name</label>
       <input
-        onChange={handleChange}
+        
         readOnly
         type="text"
         name={'firstName'}
@@ -30,7 +30,6 @@ export const CustomerForm = ({
       />
       <label htmlFor="lastName">Last name</label>
       <input
-        onChange={handleChange}
         readOnly
         type="text"
         name={'lastName'}
@@ -39,13 +38,13 @@ export const CustomerForm = ({
       />
       <label htmlFor="phoneNumber">Phone number</label>
       <input
-        onChange={handleChange}
         readOnly
         type="text"
         name={'phoneNumber'}
         id="phoneNumber"
         value={phoneNumber}
       />
+      <input type="submit" value="Add" />
     </form>
   );
 };
