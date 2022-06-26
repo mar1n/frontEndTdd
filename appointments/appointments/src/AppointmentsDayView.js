@@ -72,10 +72,42 @@ export const AppointmentsDayView = ({ appointments }) => {
   );
 };
 
-export const AppointmentForm = () => (
-  <form action="" id="appointment">
-    <select name="service" id="">
-      <option value=""></option>
-    </select>
-  </form>
-);
+export const AppointmentForm = ({
+  selectableServices,
+  service,
+  onSubmit
+}) => {
+  const [appointment, setAppointment] = useState({ service });
+  const handleServiceChange = ({ target: { value }}) => setAppointment({
+    ...appointment,
+    service: value
+  })
+  return (
+    <form id="appointment" onSubmit={() => onSubmit(appointment)}>
+      <label
+        htmlFor="appointmentLabel"
+        name="appointmentLabel"
+        id="appointment">
+        Appointment
+      </label>
+      <select name="service" value={service} onChange={handleServiceChange} readOnly>
+        <option />
+        {selectableServices.map((s) => (
+          <option key={s}>{s}</option>
+        ))}
+      </select>
+      <input type="submit" value="GO" />
+    </form>
+  );
+};
+
+AppointmentForm.defaultProps = {
+  selectableServices: [
+    'Cut',
+    'Blow-dry',
+    'Cut & color',
+    'Beard trim',
+    'Cut & beard trim',
+    'Extensions',
+  ],
+};
