@@ -28,7 +28,8 @@
   "dependencies": {
     "@babel/runtime": "^7.3.4",
     "react": "^16.9.0",
-    "react-dom": "^16.9.0"
+    "react-dom": "^16.9.0",
+    "whatwg-fetch": "^3.6.2"
   },
   "prettier": {
     "singleQuote": true,

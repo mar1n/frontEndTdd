@@ -5,6 +5,7 @@ export const CustomerForm = ({
   lastName,
   phoneNumber,
   onSubmit,
+  fetch,
 }) => {
   const [customer, setCustomer] = useState({
     firstName,
@@ -12,16 +13,25 @@ export const CustomerForm = ({
     phoneNumber,
   });
 
+  const handleSubmit = () => {
+    window.fetch('/customers', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(customer)
+    });
+  };
   const handleChange = ({ target }) =>
     setCustomer((customer) => ({
       ...customer,
       [target.name]: target.value,
     }));
   return (
-    <form onChange={handleChange} id="customer" onSubmit={() => onSubmit(customer)}>
+    <form
+      onChange={handleChange}
+      id="customer" onSubmit={handleSubmit}>
       <label htmlFor="firstName">First name</label>
       <input
-        
         readOnly
         type="text"
         name={'firstName'}
