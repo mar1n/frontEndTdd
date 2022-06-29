@@ -1,13 +1,12 @@
 import React from 'react';
 import { createContainer } from './domManipulators';
 import { AppointmentForm } from '../src/AppointmentForm';
-import ReactTestUtils from 'react-dom/test-utils';
 
 describe('AppointmentForm', () => {
-  let render, container, form, field, labelFor, element, elements;
+  let render, container, form, field, labelFor, element, elements, change, submit, withEvent;
 
   beforeEach(() => {
-    ({ render, container, form, field, labelFor, element, elements } = createContainer());
+    ({ render, container, form, field, labelFor, element, elements, change, submit, withEvent } = createContainer());
   });
 
   const findOption = (dropdownNode, textContent) => {
@@ -16,8 +15,6 @@ describe('AppointmentForm', () => {
       return option.textContent === textContent;
     });
   };
-
-  
 
   it('renders a form', () => {
     render(<AppointmentForm />);
@@ -90,7 +87,7 @@ describe('AppointmentForm', () => {
           }
         />
       );
-      await ReactTestUtils.Simulate.submit(form('appointment'));
+      await submit(form('appointment'));
     });
     it('saves new value when submitted', async () => {
       expect.hasAssertions();
@@ -102,10 +99,8 @@ describe('AppointmentForm', () => {
           }
         />
       );
-      await ReactTestUtils.Simulate.change(field('appointment','service'), {
-        target: { value: 'Cut', name: 'service' },
-      });
-      await ReactTestUtils.Simulate.submit(form('appointment'));
+      await change(field('appointment','service'),withEvent('service', 'Cut'));
+      await submit(form('appointment'));
     });
     const timeSlotTable = () =>
       element('table#time-slots');
@@ -198,13 +193,8 @@ describe('AppointmentForm', () => {
             }
           />
         );
-        ReactTestUtils.Simulate.change(startsAtField(1), {
-          target: {
-            value: availableTimeSlots[1].startsAt.toString(),
-            name: 'startsAt',
-          },
-        });
-        ReactTestUtils.Simulate.submit(form('appointment'));
+        change(startsAtField(1),withEvent('startsAt', availableTimeSlots[1].startsAt.toString()));
+        submit(form('appointment'));
       });
       it('filters appointments by selected stylist', () => {
         const availableTimeSlots = [
@@ -225,9 +215,7 @@ describe('AppointmentForm', () => {
           />
         );
 
-        ReactTestUtils.Simulate.change(field('appointment','stylist'), {
-          target: { value: 'B', name: 'stylist' },
-        });
+        change(field('appointment','stylist'),withEvent('stylist', 'B'));
 
         const cells = timeSlotTable().querySelectorAll('td');
         expect(

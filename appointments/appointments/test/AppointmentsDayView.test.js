@@ -1,17 +1,15 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
-import ReactTestUtils from 'react-dom/test-utils';
 import {
   Appointment,
   AppointmentsDayView
 } from '../src/AppointmentsDayView';
 import { createContainer } from "./domManipulators";
 
-let container, render, element, elements;
+let container, render, element, elements, click;
 let customer;
 
 beforeEach(() => {
-  ({render, container, element, elements } = createContainer())
+  ({render, container, element, elements, click } = createContainer())
 });
 describe('Appointment', () => {
 
@@ -128,7 +126,7 @@ describe('AppointmentsDayView', () => {
   it('renders another appointment when selected', () => {
     render(<AppointmentsDayView appointments={appointments} />);
     const button = elements('button')[1];
-    ReactTestUtils.Simulate.click(button);
+    click(button);
     expect(container.textContent).toMatch('Jordan');
   });
 
@@ -140,7 +138,7 @@ describe('AppointmentsDayView', () => {
   it('button has toogle class after click', () => {
     render(<AppointmentsDayView appointments={appointments} />);
     const button = elements('button')[1];
-    ReactTestUtils.Simulate.click(button);
+    click(button);
     expect(button.className).not.toMatch('toggled');
   });
 });
