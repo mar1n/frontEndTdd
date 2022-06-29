@@ -112,6 +112,7 @@ const TimeSlotTable = ({
 };
 
 export const AppointmentForm = ({
+  customer,
   selectableServices,
   service,
   selectableStylists,
@@ -154,7 +155,10 @@ export const AppointmentForm = ({
       method: 'POST',
       credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(appointment),
+      body: JSON.stringify({
+        ...appointment,
+        customer: customer.id,
+      }),
     });
     if (result.ok) {
       setError(false);
@@ -241,5 +245,5 @@ AppointmentForm.defaultProps = {
     'Cut & beard trim': ['Pat', 'Sam'],
     Extensions: ['Ashley', 'Pat'],
   },
-  onSave: () => {}
+  onSave: () => {},
 };

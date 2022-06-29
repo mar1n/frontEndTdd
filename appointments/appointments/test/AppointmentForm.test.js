@@ -9,6 +9,7 @@ import { createContainer } from './domManipulators';
 import { AppointmentForm } from '../src/AppointmentForm';
 
 describe('AppointmentForm', () => {
+  const customer = { id: 123 };
   let render,
     container,
     form,
@@ -55,7 +56,7 @@ describe('AppointmentForm', () => {
   });
 
   it('calls fetch with the right properties when submitting data', async () => {
-    render(<AppointmentForm />);
+    render(<AppointmentForm customer={customer} />);
     await submit(form('appointment'));
     expect(window.fetch).toHaveBeenCalledWith(
       '/appointments',
@@ -71,6 +72,7 @@ describe('AppointmentForm', () => {
     it('saves existing value when submitted', async () => {
       render(
         <AppointmentForm
+        customer={customer}
           {...props}
           {...{ [fieldName]: 'value' }}
         />
@@ -87,6 +89,7 @@ describe('AppointmentForm', () => {
     it('saves new value when submitted', async () => {
       render(
         <AppointmentForm
+          customer={customer}
           {...props}
           {...{ [fieldName]: 'existingValue' }}
         />
@@ -252,6 +255,7 @@ describe('AppointmentForm', () => {
       it('saves existing value when submitted', async () => {
         render(
           <AppointmentForm
+            customer={customer}
             availableTimeSlots={availableTimeSlots}
             today={today}
             startsAt={availableTimeSlots[0].startsAt}
@@ -266,6 +270,7 @@ describe('AppointmentForm', () => {
       it('saves new value when submitted', async () => {
         render(
           <AppointmentForm
+            customer={customer}
             availableTimeSlots={availableTimeSlots}
             today={today}
             startsAt={availableTimeSlots[0].startsAt}
@@ -315,6 +320,14 @@ describe('AppointmentForm', () => {
         expect(
           cells[7].querySelector('input[type="radio"]')
         ).toBeNull();
+      });
+
+      it('passes the customer id to fetch when submitting', async () => {
+        render(<AppointmentForm customer={customer} />);
+        await submit(form('appointment'));
+        expect(fetchRequestBody(window.fetch)).toMatchObject({
+          customer: customer.id,
+        });
       });
     });
   });
