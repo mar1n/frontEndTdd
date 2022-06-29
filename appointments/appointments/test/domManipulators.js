@@ -13,14 +13,17 @@ export const createContainer = () => {
 
   const simulateEvent = (eventName) => (element, eventData) =>
     ReactTestUtils.Simulate[eventName](element, eventData);
+
   const simulateEventAndWait =
     (eventName) => async (element, eventData) =>
       await act(async () =>
         ReactTestUtils.Simulate[eventName](element, eventData)
       );
+
   const withEvent = (name, value) => ({
     target: { name, value },
   });
+
   return {
     render: (component) => ReactDOM.render(component, container),
     container,
@@ -32,6 +35,6 @@ export const createContainer = () => {
     click: simulateEvent('click'),
     change: simulateEvent('change'),
     submit: simulateEventAndWait('submit'),
-    withEvent
+    withEvent,
   };
 };

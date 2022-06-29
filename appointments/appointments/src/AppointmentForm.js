@@ -1,5 +1,9 @@
 import React, { useState, useCallback } from 'react';
 
+const Error = () => (
+  <div className="error">An error occurred during save.</div>
+);
+
 const RadioButtonIfAvailable = ({
   availableTimeSlots,
   date,
@@ -114,6 +118,7 @@ export const AppointmentForm = ({
   stylist,
   serviceStylists,
   onSubmit,
+  onSave,
   salonOpensAt,
   salonClosesAt,
   today,
@@ -125,6 +130,8 @@ export const AppointmentForm = ({
     startsAt,
     stylist,
   });
+
+  const [error, setError] = useState(false);
 
   const handleSelectBoxChange = ({ target: { value, name } }) =>
     setAppointment((appointment) => ({
@@ -141,6 +148,22 @@ export const AppointmentForm = ({
     []
   );
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const result = await window.fetch('/appointments', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(appointment),
+    });
+    if (result.ok) {
+      setError(false);
+      onSave();
+    } else {
+      setError(true);
+    }
+  };
+
   const stylistsForService = appointment.service
     ? serviceStylists[appointment.service]
     : selectableStylists;
@@ -152,8 +175,13 @@ export const AppointmentForm = ({
     : availableTimeSlots;
 
   return (
-    <form id="appointment" onSubmit={() => onSubmit(appointment)}>
-      <label htmlFor="appointmentLabel" name="appointmentLabel" id='appointment'>Appointment</label>
+    <form id="appointment" onSubmit={handleSubmit}>
+      <label
+        htmlFor="appointmentLabel"
+        name="appointmentLabel"
+        id="appointment">
+        Appointment
+      </label>
       <select
         name="service"
         id="service"
@@ -213,4 +241,5 @@ AppointmentForm.defaultProps = {
     'Cut & beard trim': ['Pat', 'Sam'],
     Extensions: ['Ashley', 'Pat'],
   },
+  onSave: () => {}
 };
