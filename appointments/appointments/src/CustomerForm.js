@@ -14,35 +14,44 @@ const list =
       undefined
     );
 
+const Error = () => (
+  <div className="error">An error occurred during save.</div>
+);
+
 export const CustomerForm = ({
   firstName,
   lastName,
   phoneNumber,
-  onSubmit,
-  fetch,
   onSave,
 }) => {
+  const [validationErrors, setValidationErrors] = useState({});
+  const [error, setError] = useState(false);
+
   const [customer, setCustomer] = useState({
     firstName,
     lastName,
     phoneNumber,
   });
-  const [error, setError] = useState(false);
 
-  const [validationErrors, setValidationErrors] = useState({});
+  const handleChange = ({ target }) =>
+    setCustomer((customer) => ({
+      ...customer,
+      [target.name]: target.value,
+    }));
+
+  const validators = {
+    firstName: required('First name is required'),
+    lastName: required('Last name is required'),
+    phoneNumber: list(
+      required('Phone number is required'),
+      match(
+        /^[0-9+()\- ]*$/,
+        'Only numbers, spaces and these symbols are allowed: ( ) + -'
+      )
+    ),
+  };
 
   const handleBlur = ({ target }) => {
-    const validators = {
-      firstName: required('First name is required'),
-      lastName: required('Last name is required'),
-      phoneNumber: list(
-        required('Phone number is required'),
-        match(
-          /^[0-9+()\- ]*$/,
-          'Only numbers, spaces and these symbols are allowed: ( ) + -'
-        )
-      ),
-    };
     const result = validators[target.name](target.value);
     setValidationErrors({
       ...validationErrors,
@@ -50,8 +59,20 @@ export const CustomerForm = ({
     });
   };
 
+  const validateMany = (fields) =>
+    Object.entries(fields).reduce(
+      (result, [name, value]) => ({
+        ...result,
+        [name]: validators[name](value),
+      }),
+      {}
+    );
+
   const hasError = (fieldName) =>
     validationErrors[fieldName] !== undefined;
+
+  const anyErrors = (errors) =>
+    Object.values(errors).some((error) => error !== undefined);
 
   const renderError = (fieldName) => {
     if (hasError(fieldName)) {
@@ -65,26 +86,26 @@ export const CustomerForm = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const result = await window.fetch('/customers', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(customer),
-    });
-    if (result.ok) {
-      setError(false);
-      const customerWithId = await result.json();
-      onSave(customerWithId);
+    const validationResult = validateMany(customer);
+    if (!anyErrors(validationResult)) {
+      const result = await window.fetch('/customers', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(customer),
+      });
+      if (result.ok) {
+        setError(false);
+        const customerWithId = await result.json();
+        onSave(customerWithId);
+      } else {
+        setError(true);
+      }
     } else {
-      setError(true);
+      setValidationErrors(validationResult);
     }
   };
-  const handleChange = ({ target }) =>
-    setCustomer((customer) => ({
-      ...customer,
-      [target.name]: target.value,
-    }));
-    
+
   return (
     <form id="customer" onSubmit={handleSubmit}>
       {error ? <Error /> : null}
@@ -125,9 +146,6 @@ export const CustomerForm = ({
     </form>
   );
 };
-const Error = () => (
-  <div className="error">An error occurred during save.</div>
-);
 
 CustomerForm.defaultProps = {
   onSave: () => {},
