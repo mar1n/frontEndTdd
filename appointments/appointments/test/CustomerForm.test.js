@@ -7,6 +7,7 @@ import {
   fetchResponseError,
   fetchRequestBody,
 } from './spyHelpers';
+import { act } from 'react-dom/test-utils';
 
 describe('CustomerForm', () => {
   let render,
@@ -17,6 +18,7 @@ describe('CustomerForm', () => {
     element,
     change,
     submit,
+    blur,
     withEvent;
 
   beforeEach(() => {
@@ -29,6 +31,7 @@ describe('CustomerForm', () => {
       element,
       change,
       submit,
+      blur,
       withEvent,
     } = createContainer());
     jest
@@ -165,6 +168,36 @@ describe('CustomerForm', () => {
     await submit(form('customer'));
     await submit(form('customer'));
 
+    expect(element('.error')).toBeNull();
+  });
+  const itInvalidatesFieldWithValue = (
+    fieldName,
+    value,
+    description
+  ) => {
+    it(`displays error after blur when ${fieldName} field is '${value}'`, () => {
+      render(<CustomerForm />);
+
+      blur(
+        field('customer', fieldName),
+        withEvent(fieldName, value)
+      );
+
+      expect(element('.error')).not.toBeNull();
+      expect(element('.error').textContent).toMatch(description)
+    });
+  }
+  itInvalidatesFieldWithValue('firstName', ' ', 'First name is required');
+  itInvalidatesFieldWithValue('lastName', ' ', 'Last name is required');
+  itInvalidatesFieldWithValue('phoneNumber', 'invalid', 'Only numbers, spaces and these symbols are allowed: ( ) + -');
+
+  it('accepts standard phone number characters when validating', () => {
+    render(<CustomerForm />);
+
+    blur(
+      element("[name='phoneNumber']"),
+      withEvent('phoneNumber', '0123456789+()- ')
+    );
     expect(element('.error')).toBeNull();
   });
   describe('first name field', () => {
