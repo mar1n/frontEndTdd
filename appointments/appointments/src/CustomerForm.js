@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { required, match, list, hasError, validateMany, anyErrors } from './formValidation';
+import {
+  required,
+  match,
+  list,
+  hasError,
+  validateMany,
+  anyErrors,
+} from './formValidation';
 
 const Error = () => (
   <div className="error">An error occurred during save.</div>
@@ -13,18 +20,29 @@ export const CustomerForm = ({
 }) => {
   const [validationErrors, setValidationErrors] = useState({});
   const [error, setError] = useState(false);
-
+  const [submitting, setSubmitting] = useState(false);
   const [customer, setCustomer] = useState({
     firstName,
     lastName,
     phoneNumber,
   });
 
-  const handleChange = ({ target }) =>
+  const handleChange = ({ target }) => {
     setCustomer((customer) => ({
       ...customer,
       [target.name]: target.value,
     }));
+    if (hasError(validationErrors, target.name)) {
+      validateSingleField(target.name, target.value);
+    }
+  };
+
+  const validateSingleField = (fieldName, fieldValue) => {
+    const result = validateMany(validators, {
+      [fieldName]: fieldValue,
+    });
+    setValidationErrors({ ...validationErrors, ...result });
+  };
 
   const validators = {
     firstName: required('First name is required'),
@@ -38,18 +56,8 @@ export const CustomerForm = ({
     ),
   };
 
-  const handleBlur = ({ target }) => {
-    const result = validateMany(validators, {
-      [target.name]: target.value
-    });
-
-    setValidationErrors({
-      ...validationErrors,
-      ...result,
-    });
-  };
-
-  
+  const handleBlur = ({ target }) => 
+    validateSingleField(target.name, target.value);
 
   const renderError = (fieldName) => {
     if (hasError(validationErrors, fieldName)) {
@@ -61,23 +69,32 @@ export const CustomerForm = ({
     }
   };
 
+  const doSave = async () => {
+    setSubmitting(true);
+    const result = await window.fetch('/customers', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(customer)
+    });
+    setSubmitting(false);
+    if (result.ok) {
+      setError(false);
+      const customerWithId = await result.json();
+      onSave(customerWithId);
+    } else if (result.status === 422) {
+      const response = await result.json();
+      setValidationErrors(response.errors);
+    } else {
+      setError(true);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validationResult = validateMany(validators, customer);
     if (!anyErrors(validationResult)) {
-      const result = await window.fetch('/customers', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(customer),
-      });
-      if (result.ok) {
-        setError(false);
-        const customerWithId = await result.json();
-        onSave(customerWithId);
-      } else {
-        setError(true);
-      }
+      await doSave();
     } else {
       setValidationErrors(validationResult);
     }
@@ -119,7 +136,10 @@ export const CustomerForm = ({
       />
       {renderError('phoneNumber')}
 
-      <input type="submit" value="Add" />
+      <input type="submit" value="Add" disabled={submitting} />
+      {submitting ? (
+        <span className="submittingIndicator" />
+      ) : null}
     </form>
   );
 };

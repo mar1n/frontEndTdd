@@ -7,6 +7,7 @@ import {
 } from './spyHelpers';
 import { createContainer } from './domManipulators';
 import { CustomerForm } from '../src/CustomerForm';
+import ReactTestUtils, { act } from 'react-dom/test-utils';
 
 const validCustomer = {
   firstName: 'first',
@@ -69,6 +70,20 @@ describe('CustomerForm', () => {
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
       })
+    );
+  });
+
+  it('renders field validation errors from server', async () => {
+    const errors = {
+      phoneNumber: 'Phone number already exists in the system',
+    };
+    window.fetch.mockReturnValue(
+      fetchResponseError(422, { errors })
+    );
+    render(<CustomerForm {...validCustomer} />);
+    await submit(form('customer'));
+    expect(element('.error').textContent).toMatch(
+      errors.phoneNumber
     );
   });
 
@@ -288,6 +303,67 @@ describe('CustomerForm', () => {
       );
 
       expect(element('.error')).toBeNull();
+    });
+
+    const itClearsFieldError = (fieldName, fieldValue) => {
+      it(`clears error when user corrects it`, async () => {
+        render(<CustomerForm {...validCustomer} />);
+
+        blur(
+          field('customer', fieldName),
+          withEvent(fieldName, '')
+        );
+        change(
+          field('customer', fieldName),
+          withEvent(fieldName, fieldValue)
+        );
+
+        expect(element('.error')).toBeNull();
+      });
+    };
+
+    const itDoesNotInvalidateFieldOnKeypress = (
+      fieldName,
+      fieldValue
+    ) => {
+      it(`does not validate field on keypress`, async () => {
+        render(<CustomerForm {...validCustomer} />);
+
+        change(
+          field('customer', fieldName),
+          withEvent(fieldName, fieldValue)
+        );
+
+        expect(element('.error')).toBeNull();
+      });
+    };
+
+    itClearsFieldError('firstName', 'name');
+    itClearsFieldError('lastName', 'name');
+    itClearsFieldError('phoneNumber', '1234567890');
+
+    itDoesNotInvalidateFieldOnKeypress('firstName', '');
+    itDoesNotInvalidateFieldOnKeypress('lastName', '');
+    itDoesNotInvalidateFieldOnKeypress('phoneNumber', '');
+  });
+  describe('form has been submitted', () => {
+    it('displays indicator when form is submitting', async () => {
+      render(<CustomerForm {...validCustomer} />);
+      act(() => {
+        ReactTestUtils.Simulate.submit(form('customer'));
+      });
+      await act(async () => {
+        expect(element('span.submittingIndicator')).not.toBeNull();
+      });
+    });
+    it('initially does not display the submitting indicator', () => {
+      render(<CustomerForm {...validCustomer} />);
+      expect(element('.submittingIndicator')).toBeNull();
+    });
+    it('hides indicator when from has submitted', async () => {
+      render(<CustomerForm {...validCustomer} />);
+      await submit(form('customer'));
+      expect(element('.submittingIndicator')).toBeNull();
     });
   });
 });
