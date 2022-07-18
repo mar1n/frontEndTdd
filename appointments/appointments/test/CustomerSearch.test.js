@@ -14,6 +14,10 @@ const twoCustomers = [
   { id: 2, firstName: 'C', lastName: 'D', phoneNumber: '2' },
 ];
 
+const anotherTenCustomers = Array.from('ABCDEFGHIJ', (id) => ({
+  id,
+}));
+
 const tenCustomers = Array.from('0123456789', (id) => ({ id }));
 
 describe('CustomerSearch', () => {
@@ -87,7 +91,7 @@ describe('CustomerSearch', () => {
     expect(elements('tbody tr').length).toEqual(1);
     expect(elements('td')[0].textContent).toEqual('Next');
   });
-  it('has a previous button',  async () => {
+  it('has a previous button', async () => {
     await renderAndWait(<CustomerSearch />);
     expect(element('button#previous-page')).not.toBeNull();
   });
@@ -96,6 +100,35 @@ describe('CustomerSearch', () => {
     await renderAndWait(<CustomerSearch />);
     await clickAndWait(element('button#next-page'));
     await clickAndWait(element('button#previous-page'));
-    expect(window.fetch).toHaveBeenLastCalledWith('/customers', expect.anything())
+    expect(window.fetch).toHaveBeenLastCalledWith(
+      '/customers',
+      expect.anything()
+    );
+  });
+  it('moves back one page when clicking previous after multiple clicks of the next button', async () => {
+    window.fetch
+      .mockReturnValueOnce(fetchResponseOk(tenCustomers))
+      .mockReturnValue(fetchResponseOk(anotherTenCustomers));
+    await renderAndWait(<CustomerSearch />);
+    await clickAndWait(element('button#next-page'));
+    await clickAndWait(element('button#next-page'));
+    await clickAndWait(element('button#previous-page'));
+    expect(window.fetch).toHaveBeenLastCalledWith(
+      '/customers?after=9',
+      expect.anything()
+    );
+  });
+  it('moves back multiple pages', async () => {
+    window.fetch.mockReturnValueOnce(fetchResponseOk(tenCustomers))
+      .mockReturnValue(fetchResponseOk(anotherTenCustomers));
+      await renderAndWait(<CustomerSearch />);
+      await clickAndWait(element('button#next-page'));
+      await clickAndWait(element('button#next-page'));
+      await clickAndWait(element('button#previous-page'));
+      await clickAndWait(element('button#previous-page'));
+      expect(window.fetch).toHaveBeenLastCalledWith(
+        '/customers',
+        expect.anything()
+      );
   });
 });
