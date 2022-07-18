@@ -42,6 +42,7 @@ export const createContainer = () => {
     submit: simulateEventAndWait('submit'),
     blur: simulateEvent('blur'),
     clickAndWait: simulateEventAndWait('click'),
+    changeAndWait: simulateEventAndWait('change'),
     withEvent,
   };
 };

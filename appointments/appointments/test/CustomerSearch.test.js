@@ -1,6 +1,6 @@
 import React from 'react';
 import 'whatwg-fetch';
-import { createContainer, withEvent } from './domManipulators';
+import { createContainer } from './domManipulators';
 import { CustomerSearch } from '../src/CustomerSearch';
 import { fetchResponseOk } from './spyHelpers';
 import { render } from 'react-dom';
@@ -21,7 +21,13 @@ const anotherTenCustomers = Array.from('ABCDEFGHIJ', (id) => ({
 const tenCustomers = Array.from('0123456789', (id) => ({ id }));
 
 describe('CustomerSearch', () => {
-  let renderAndWait, container, element, elements, clickAndWait;
+  let renderAndWait,
+    container,
+    element,
+    elements,
+    clickAndWait,
+    changeAndWait,
+    withEvent;
 
   beforeEach(() => {
     ({
@@ -30,6 +36,8 @@ describe('CustomerSearch', () => {
       element,
       elements,
       clickAndWait,
+      changeAndWait,
+      withEvent,
     } = createContainer());
     jest
       .spyOn(window, 'fetch')
@@ -119,16 +127,65 @@ describe('CustomerSearch', () => {
     );
   });
   it('moves back multiple pages', async () => {
-    window.fetch.mockReturnValueOnce(fetchResponseOk(tenCustomers))
+    window.fetch
+      .mockReturnValueOnce(fetchResponseOk(tenCustomers))
       .mockReturnValue(fetchResponseOk(anotherTenCustomers));
-      await renderAndWait(<CustomerSearch />);
-      await clickAndWait(element('button#next-page'));
-      await clickAndWait(element('button#next-page'));
-      await clickAndWait(element('button#previous-page'));
-      await clickAndWait(element('button#previous-page'));
-      expect(window.fetch).toHaveBeenLastCalledWith(
-        '/customers',
-        expect.anything()
-      );
+    await renderAndWait(<CustomerSearch />);
+    await clickAndWait(element('button#next-page'));
+    await clickAndWait(element('button#next-page'));
+    await clickAndWait(element('button#previous-page'));
+    await clickAndWait(element('button#previous-page'));
+    expect(window.fetch).toHaveBeenLastCalledWith(
+      '/customers',
+      expect.anything()
+    );
+  });
+  it('has a search input field with placeholder', async () => {
+    await renderAndWait(<CustomerSearch />);
+    expect(element('input')).not.toBeNull();
+    expect(element('input').getAttribute('placeholder')).toEqual(
+      'Enter filter text'
+    );
+  });
+  it('performs search when search term is changed', async () => {
+    await renderAndWait(<CustomerSearch />);
+    await changeAndWait(
+      element('input'),
+      withEvent('input', 'name')
+    );
+    expect(window.fetch).toHaveBeenLastCalledWith(
+      '/customers?searchTerm=name',
+      expect.anything()
+    );
+  });
+  it('includes search term when moving to next page', async () => {
+    window.fetch.mockReturnValue(fetchResponseOk(tenCustomers));
+    await renderAndWait(<CustomerSearch />);
+    await changeAndWait(
+      element('input'),
+      withEvent('input', 'name')
+    );
+    await clickAndWait(element('button#next-page'));
+    expect(window.fetch).toHaveBeenLastCalledWith(
+      '/customers?after=9&searchTerm=name',
+      expect.anything()
+    );
+  });
+  it('displays provided action buttons for each customer', async () => {
+    const actionSpy = jest.fn();
+    actionSpy.mockReturnValue('actions');
+    window.fetch.mockReturnValue(fetchResponseOk(oneCustomer));
+    await renderAndWait(
+      <CustomerSearch renderCustomerActions={actionSpy} />
+    );
+    const rows = elements('table tbody td');
+    expect(rows[rows.length - 1].textContent).toEqual('actions');
+  });
+  it('passes customer to the renderCustomerActions prop', async () => {
+    const actionSpy = jest.fn();
+    actionSpy.mockReturnValue('actions');
+    window.fetch.mockReturnValue(fetchResponseOk(oneCustomer));
+    await renderAndWait(<CustomerSearch renderCustomerActions={actionSpy} />);
+    expect(actionSpy).toHaveBeenCalledWith(oneCustomer[0]);
   });
 });
