@@ -6,6 +6,9 @@ export const type = (type) => (element) => element.type === type;
 export const className = (className) => (element) =>
   element.props.className === className;
 
+export const prop = (pathName, value) => (element) =>
+  element.props[pathName] === value;
+
 export const click = (element) => element.props.onClick();
 
 export const childrenOf = (element) => {
